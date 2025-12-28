@@ -9,13 +9,21 @@ CanICannabis is an open-source web mapping application that visualizes legal and
 - Full open-source stack: OpenStreetMap + PostgreSQL/PostGIS + FastAPI + Leaflet
  ## System Architecture
  The project follows a classic full-stack web GIS architecture:
-1. OpenStreetMap Data (Geofabrik) 
-2. osm2pgsql Import 
-3. PostgreSQL/PostGIS Database 
-4. SQL + PostGIS Logic (red_small, blue_small zones)
-5. FastAPI Backend (/zones/red, /zones/blue endpoints)
-6. Frontend (Leaflet + JavaScript)
-7. Web Browser Map
+ ```
+OpenStreetMap Data (Geofabrik)
+↓
+osm2pgsql Import
+↓
+PostgreSQL/PostGIS Database
+↓
+SQL + PostGIS Logic (red_small, blue_small zones)
+↓
+FastAPI Backend (/zones/red, /zones/blue endpoints)
+↓
+ Frontend (Leaflet + JavaScript)
+↓
+Web Browser Map
+```
 ## Data Pipeline
 #### 1. OSM Data Import: Karlsruhe extract from Geofabrik
 #### 2. Spatial Processing: PostGIS queries calculate restricted zones based on:
@@ -34,3 +42,176 @@ CanICannabis is an open-source web mapping application that visualizes legal and
 | Map Tiles | OpenStreetMap (via Leaflet) |
 | Geocoding | Nominatim (OSM geocoding service) |
 | Version Control | GitHub |
+## Project Structure
+```
+CanICannabis/
+├── backend/
+│   ├── api.py              # FastAPI application
+│   ├── requirements.txt    # Python dependencies
+│   └── sql/
+│       ├── import_osm.sql  # Import OSM data into PostGIS
+│       └── create_zones.sql# Create red/blue zone tables
+├── frontend/
+│   ├── map.html            # Web map interface
+│   └── app.js              # Frontend logic (requests + map)
+├── docs/
+│   ├── screenshots/        # UI screenshots
+│   └── API_DOCS.md         # API documentation
+├── README.md               # Project overview & setup
+└── LICENSE                 # Project license 
+```
+## How to Run
+### Prerequisites
+OSGeoLive VM or Linux system with:
+- PostgreSQL 15 + PostGIS
+- Python 3.8+
+- Git
+### Backend Setup (FastAPI + PostGIS)
+#### 1. Start OSGeoLive and PostgreSQL
+PostgreSQL should auto-start in OSGeoLive. Verify it's running:
+
+sudo systemctl status postgresql
+#### 2. Create Database and Import OSM Data (one-time setup)
+Create database:
+
+sudo -u postgres createdb canicannabis
+
+Import Karlsruhe OSM data:
+
+osm2pgsql -d canicannabis --slim -C 2048 karlsruhe.osm.pbf
+
+Connect to database and run zone creation SQL:
+
+sudo -u postgres psql canicannabis < sql/create_zones.sql
+#### 3. Install Python Dependencies
+cd backend 
+
+pip install -r requirements.txt 
+
+Example requirements.txt:
+
+fastapi 
+
+0.104.1uvicorn0.24.0 
+
+psycopg2-binary 
+
+2.9.9pydantic2.5.0
+#### 4. Start FastAPI Backend
+cd backend 
+
+uvicorn api:app --reload --port 8000
+
+###### Output:
+
+INFO: Uvicorn running on http://127.0.0.1:8000 
+INFO: Application startup complete
+#### 5. Test Backend Endpoints
+Open in browser: 
+- http://localhost:8000/zones/red – Returns red zone GeoJSON
+- http://localhost:8000/zones/blue – Returns blue zone GeoJSON
+  
+Response format:
+```
+{
+"type":"FeatureCollection",
+"features": [
+{
+"type": "Feature",
+"geometry": {
+"type": "MultiPolygon",
+"coordinates": [...]
+},
+"properties": {
+"restriction": "Cannabis consumption forbidden (100m from school)"
+}
+}
+]
+}
+```
+### Frontend Setup (Leaflet + HTML)
+#### 1. Open Map in Browser
+
+cd frontend 
+
+firefox map.html
+
+Or navigate directly:
+
+file:///path/to/canicannabis/frontend/map.html
+#### 2. Features Available
+1. Map Display: Karlsruhe centered, OpenStreetMap tiles
+2. Zone Layers:
+- Red zones load automatically (forbidden zones)
+- Blue zones toggle via "Show/Hide Zones" button
+3. Address Search:
+- Type address in search box (e.g., "KIT Karlsruhe")
+- Click "Search"
+- Map zooms and places marker
+- See which zones apply
+4. Popups: Click any polygon to see restriction details
+## Usage Examples
+#### Example 1: Check a Specific Location
+1. Open map.html
+2. Type "Schlossplatz Karlsruhe" in search box
+3. Click "Search"
+4. Map zooms to location
+5. Check if area is in red (forbidden) or blue (allowed) zones
+#### Example 2: Toggle Zone Visibility
+1. Click "Show/Hide Blue Zones" button
+2. Blue zones appear/disappear on map
+3. Compare allowed vs. forbidden areas
+#### Example 3: View Zone Restrictions
+1. Click on any polygon (red or blue)
+2. Popup shows restriction text
+3. Close popup by clicking X or clicking elsewhere
+## API Documentation 
+### GET /zones/red
+Description: Fetch all restricted cannabis consumption zones (100m from schools)
+
+Response: GeoJSON FeatureCollection
+
+Example:
+
+curl http://localhost:8000/zones/red | jq
+### GET /zones/blue
+
+Description: Fetch allowed cannabis consumption zones (outside restricted areas)
+
+Response: GeoJSON FeatureCollection
+
+Example:
+
+curl http://localhost:8000/zones/blue | jq
+### Query Parameters
+Both endpoints support optional filtering: 
+- limit: Maximum number of features to return
+
+## Development
+### Modifying Zone Rules
+Edit sql/create_zones.sql to change distance buffers or restriction logic:
+
+-- Example: Change school buffer from 100m to 150m 
+
+UPDATE red_small SET geom = ST_Buffer(school_point, 150) 
+
+WHERE zone_type = 'school';
+
+Restart FastAPI after database changes:
+Stop: Ctrl+C
+
+Restart: uvicorn api:app --reload --port 8000
+### Adding New Layers
+1. Create new zone table in PostgreSQL
+2. Add new endpoint in api.py:
+   @app.get("/zones/other")
+    def get_other_zones():
+    #Query database
+    #Return GeoJSON
+3. Load in frontend app.js:
+
+   fetch('http://localhost:8000/zones/other')
+
+   .then(r => r.json())
+
+   .then(data => L.geoJSON(data).addTo(map));
