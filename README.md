@@ -215,3 +215,94 @@ Restart: uvicorn api:app --reload --port 8000
    .then(r => r.json())
 
    .then(data => L.geoJSON(data).addTo(map));
+## Deployment
+### Local Testing (Current Setup)
+-  Running on OSGeoLive
+-  Backend at http://localhost:8000
+-  Frontend via file:// protocol or HTTP server
+### Production Deployment (Future) 
+For deployment to a server: 
+
+1. Environment Configuration: Use .env file for database credentials, API URLs
+
+2. Docker Containers: Optional containerization for FastAPI + PostgreSQL
+
+3. Reverse Proxy: Nginx/Apache for HTTPS
+   
+4. CI/CD Pipeline: GitHub Actions for automated testing and deployment
+
+5. Monitoring: Logs and error tracking
+## Testing
+### Manual Testing Checklist
+- [ ] Backend starts without errors (uvicorn)
+- [ ] /zones/red returns valid GeoJSON
+- [ ] /zones/blue returns valid GeoJSON
+- [ ] Frontend loads in browser
+- [ ] Map displays correctly
+- [ ] Red zones visible by default
+- [ ] Blue zones toggle on/off
+- [ ] Search finds addresses in Karlsruhe
+- [ ] Clicking polygons shows popups
+- [ ] Search result zooms to correct location   
+### Automated Testing (Future)
+- Unit tests for FastAPI endpoints
+- Integration tests for database queries
+- Frontend tests with Selenium or Cypress
+## Troubleshooting
+### Backend Issues
+| Problem | Solution |
+| -------- | -------- |
+| Error: address already in use :8000   | Change port: uvicorn api:app --port 8001   |
+| psycopg2 connection refused   | Check PostgreSQL is running: sudo systemctl start postgresql   |
+| No module named 'fastapi'| Install dependencies: pip install -r requirements.txt |
+### Frontend Issues
+| Column 1 | Column 2 |
+| -------- | -------- |
+| 404 in browser console    | Backend not running; start with uvicorn   |
+| CORS error   | Add CORS headers in FastAPI: from fastapi.middleware.cors import CORSMiddleware   |
+| Search not working | Check Nominatim internet connection |
+
+## Contributing
+To contribute to this project:
+
+1. Fork the repository
+
+2. Create a branch: git checkout -b feature/my-feature
+
+3. Make changes and test locally
+
+4. Commit: git commit -m "Add feature description"
+
+5. Push: git push origin feature/my-feature
+
+6. Open a Pull Request
+
+## Team
+- **Sami** – Project Lead, Backend Architecture
+- **Jomert** – Backend Development, PostGIS Queries
+- **Mustafa** – Frontend Development, Leaflet Integration
+- **Brenda** – Data Management, Documentation
+
+## References
+### Legal Basis
+- German Cannabis Act (Cannabisgesetz – CanG), § 5: Distance regulations
+- https://www.gesetze-im-internet.de/canag/
+### Technologies
+- Leaflet.js: https://leafletjs.com/
+- FastAPI: https://fastapi.tiangolo.com/
+- PostGIS: https://postgis.net/
+- OpenStreetMap: https://www.openstreetmap.org/
+- Nominatim: https://nominatim.openstreetmap.org/
+### Related Projects
+- OSGeoLive: https://live.osgeo.org/
+- GeoJSON Specification: https://datatracker.ietf.org/doc/html/rfc7946
+### License
+This project is licensed under the MIT License. See LICENSE file for details.
+### Changelog
+##### Version 1.0 (December 2025)
+- Core map functionality implemented
+- Red and blue zone visualization
+- Address search with Nominatim
+- Interactive popups on zone clicks
+- GitHub repository and README
+
