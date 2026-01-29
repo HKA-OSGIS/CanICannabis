@@ -1,6 +1,6 @@
 # CanICannabis
 ## Project Overview
-CanICannabis is an open-source web mapping application that visualizes legal and prohibited cannabis consumption zones in Karlsruhe, Germany, based on the German Cannabis Act (Cannabisgesetz – CanG) § 5 distance regulations.
+CanICannabis is an open-source web mapping application that visualizes legal and prohibited cannabis consumption zones in Baden Wurttemberg, Germany, based on the German Cannabis Act (Cannabisgesetz – CanG) § 5 distance regulations.
 ### Key Features:
 - Interactive map showing restricted and allowed consumption zones
 - Distance-based calculations from schools (100m minimum distance)
@@ -25,7 +25,7 @@ FastAPI Backend (/zones/red, /zones/blue endpoints)
 Web Browser Map
 ```
 ## Data Pipeline
-#### 1. OSM Data Import: Karlsruhe extract from Geofabrik
+#### 1. OSM Data Import: Baden Wurttemberg extract from Geofabrik
 #### 2. Spatial Processing: PostGIS queries calculate restricted zones based on:
 - School locations (buffer 100m = red_small, forbidden)
 - Youth centers (buffer 100m = restrictions)
@@ -76,9 +76,9 @@ Create database:
 
 sudo -u postgres createdb canicannabis
 
-Import Karlsruhe OSM data:
+Import Baden Wurttemberg OSM data:
 
-osm2pgsql -d canicannabis --slim -C 2048 karlsruhe.osm.pbf
+osm2pgsql -d canicannabis --slim -C 2048 Baden Wurttemberg.osm.pbf
 
 Connect to database and run zone creation SQL:
 
@@ -140,12 +140,12 @@ Or navigate directly:
 
 file:///path/to/canicannabis/frontend/map.html
 #### 2. Features Available
-1. Map Display: Karlsruhe centered, OpenStreetMap tiles
+1. Map Display: Baden Wurttemberg centered, OpenStreetMap tiles
 2. Zone Layers:
 - Red zones load automatically (forbidden zones)
 - Blue zones toggle via "Show/Hide Zones" button
 3. Address Search:
-- Type address in search box (e.g., "KIT Karlsruhe")
+- Type address in search box (e.g., "HKA Karlsruhe")
 - Click "Search"
 - Map zooms and places marker
 - See which zones apply
